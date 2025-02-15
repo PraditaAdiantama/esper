@@ -12,19 +12,28 @@
 
 static const char *TAG = "softap";
 
-// html_page
-const char *html_page =
+// main page
+const char *html =
     "<html>"
-    "<head>"
-    "</head>"
-    "<body>"
-    "<h3>ESP Pradita</h3>"
-    "</body>"
+    "	<head>"
+    "     <title>ESP Pradita</title>"
+    "	</head>"
+    "	<body>"
+    "	  <h3>ESP Pradita</h3>"
+    "	  <button id='onButton'>Turn ON</button>"
+    "	  <button id='offButton'>Turn OFF</button>"
+    "	  <script>"
+    "	    const a = document.getElementById('onButton');"
+    "	    a.addEventListener('click', async () => { await fetch('/on', {method: 'POST'}) });"
+    "	    const b = document.getElementById('offButton');"
+    "	    b.addEventListener('click', async () => { await fetch('/off', {method: 'POST'}) });"
+    " 	  </script>"
+    "	</body>"
     "</html>";
 
 esp_err_t webpage_handler(httpd_req_t *req)
 {
-    httpd_resp_send(req, html_page, HTTPD_RESP_USE_STRLEN);
+    httpd_resp_send(req, html, HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
 }
 
@@ -42,6 +51,7 @@ esp_err_t led_off_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+// init webserver
 httpd_handle_t start_webserver()
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -49,8 +59,8 @@ httpd_handle_t start_webserver()
     httpd_start(&server, &config);
 
     httpd_uri_t uri_page = {.uri = "/", .method = HTTP_GET, .handler = webpage_handler};
-    httpd_uri_t uri_on = {.uri = "/on", .method = HTTP_GET, .handler = led_on_handler};
-    httpd_uri_t uri_off = {.uri = "/off", .method = HTTP_GET, .handler = led_off_handler};
+    httpd_uri_t uri_on = {.uri = "/on", .method = HTTP_POST, .handler = led_on_handler};
+    httpd_uri_t uri_off = {.uri = "/off", .method = HTTP_POST, .handler = led_off_handler};
 
     // register all routes
     httpd_register_uri_handler(server, &uri_page);
@@ -60,6 +70,7 @@ httpd_handle_t start_webserver()
     return server;
 }
 
+// init wifi soft AP
 void wifi_init_softap(void)
 {
     ESP_ERROR_CHECK(esp_netif_init());
